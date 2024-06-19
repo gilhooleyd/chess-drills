@@ -1,5 +1,7 @@
 "use strict";
 
+import { Chess } from "chess.js";
+
 // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 
 /**
@@ -31,18 +33,23 @@ export class Position {
    * @param {string} fenString
    */
   constructor(fenString) {
-    const {
-      board,
-      active,
-      castling,
-      enPassantTarget,
-      halfmoveClock,
-      fullmoveNumber,
-    } = parseFen(fenString);
+    /** @type {Chess} */
+    this.chess = new Chess(fenString);
+  }
 
-    /** @type {Map<CoordString, Piece>} */
-    this.board = board;
-    this.active = active;
+  /**
+   * @returns {Map<CoordString, Piece>}
+   */
+  get board() {
+    return new Map(
+      this.chess.board().map((rank) =>
+        rank
+          .flatMap((item) => (item ? [item] : []))
+          .map(({ square, type, color }) => {
+            [square, color === "w" ? type.toUpperCase() : type.toLowerCase()];
+          })
+      )
+    );
   }
 }
 
@@ -87,76 +94,3 @@ export function fromCoordString(stringKey) {
 }
 
 export const ALL_PIECES = "rnbqkbnrpPRNBQKBNR";
-
-/**
- * @param {string} fenString
- * @returns {{
- *    board: Map<CoordString, Piece>,
- *    active: Color,
- *    castling: {
- *      whiteShort: boolean,
- *      whiteLong: boolean,
- *      blackShort: boolean,
- *      blackLong: boolean,
- *    },
- *    enPassantTarget: Coord,
- *    halfmoveClock: number,
- *    fullmoveNumber: number,
- * }}
- */
-function parseFen(fenString) {
-  const [
-    boardStr,
-    activeStr,
-    castlingStr,
-    enPassantTargetStr,
-    halfmoveClockStr,
-    fullmoveNumberStr,
-  ] = fenString.split(" ");
-
-  const board = new Map();
-
-  boardStr
-    .split("/")
-    .reverse()
-    .forEach((rank, rankIndex) => {
-      let currFileIndex = 0;
-      rank.split("").forEach((c) => {
-        const skip = Number(c);
-        if (!Number.isNaN(skip)) {
-          currFileIndex += skip;
-          return;
-        }
-
-        if (!ALL_PIECES.includes(c)) {
-          throw new Error(`${c} is not a valid piece`);
-        }
-        board.set(toCoordString(FILES[currFileIndex], RANKS[rankIndex]), c);
-        currFileIndex++;
-      });
-    });
-
-  if (activeStr.length != 1 || !"bw".includes(activeStr)) {
-    throw new Error(`${activeStr} is not "b" or "w"`);
-  }
-  const active = activeStr;
-
-  const castling = {
-    whiteShort: castlingStr.includes("K"),
-    whiteLong: castlingStr.includes("Q"),
-    blackShort: castlingStr.includes("k"),
-    blackLong: castlingStr.includes("q"),
-  };
-
-  return {
-    board,
-    active,
-    castling,
-    enPassantTarget:
-      enPassantTargetStr !== "-"
-        ? fromCoordString(enPassantTargetStr)
-        : undefined,
-    halfmoveClock: Number(halfmoveClockStr),
-    fullmoveNumber: Number(fullmoveNumberStr),
-  };
-}
