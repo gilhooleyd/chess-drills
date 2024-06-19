@@ -26,3 +26,9 @@ for (var i = 0; i < 64; i+=8) {
     var child = board.children[i];
     child.innerHTML += `<div class="notation">${i/8 + 1}</div>`;
 }
+
+const urlParams = new URLSearchParams(window.location.search);
+const data = atob(urlParams.get("d"));
+
+console.log(data);
+
