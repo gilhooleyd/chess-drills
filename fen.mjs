@@ -51,6 +51,24 @@ export class Position {
       )
     );
   }
+
+  /**
+   * Description
+   * @param {CoordString|Coord} square
+   * @returns {Piece}
+   */
+  get(square) {
+    const squareString =
+      typeof square === "string" ? square : toCoordString(square);
+    const piece = this.chess.get(squareString);
+
+    if (piece == null) {
+      return undefined;
+    }
+
+    const { type, color } = piece;
+    return color === "w" ? type.toUpperCase() : type.toLowerCase();
+  }
 }
 
 /**
