@@ -3,21 +3,25 @@
 // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 
 /**
+ * E.g. "a4"
  * @typedef {string}
  */
 let CoordString;
 
 /**
+ * E.g. {file: "a", rank: 4}
  * @typedef {{file: string, rank: number}}
  */
 let Coord;
 
 /**
+ * E.g. "p" for black pawn, "K" for white king
  * @typedef {string}
  */
 let Piece;
 
 /**
+ * "w" for white, "b" for black
  * @typedef {string}
  */
 let Color;
@@ -27,10 +31,18 @@ export class Position {
    * @param {string} fenString
    */
   constructor(fenString) {
-    const parsed = parseFen(fenString);
+    const {
+      board,
+      active,
+      castling,
+      enPassantTarget,
+      halfmoveClock,
+      fullmoveNumber,
+    } = parseFen(fenString);
 
     /** @type {Map<CoordString, Piece>} */
-    this.board = parsed.board;
+    this.board = board;
+    this.active = active;
   }
 }
 
@@ -124,7 +136,27 @@ function parseFen(fenString) {
       });
     });
 
+  if (activeStr.length != 1 || !"bw".includes(activeStr)) {
+    throw new Error(`${activeStr} is not "b" or "w"`);
+  }
+  const active = activeStr;
+
+  const castling = {
+    whiteShort: castlingStr.includes("K"),
+    whiteLong: castlingStr.includes("Q"),
+    blackShort: castlingStr.includes("k"),
+    blackLong: castlingStr.includes("q"),
+  };
+
   return {
     board,
+    active,
+    castling,
+    enPassantTarget:
+      enPassantTargetStr !== "-"
+        ? fromCoordString(enPassantTargetStr)
+        : undefined,
+    halfmoveClock: Number(halfmoveClockStr),
+    fullmoveNumber: Number(fullmoveNumberStr),
   };
 }
