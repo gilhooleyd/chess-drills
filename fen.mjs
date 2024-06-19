@@ -1,6 +1,6 @@
 "use strict";
 
-import { Chess } from "chess.js";
+import { Chess } from "./chess.js";
 
 // https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
 
@@ -46,8 +46,8 @@ export class Position {
         rank
           .flatMap((item) => (item ? [item] : []))
           .map(({ square, type, color }) => {
-            [square, color === "w" ? type.toUpperCase() : type.toLowerCase()];
-          })
+            return [square, color === "w" ? type.toUpperCase() : type.toLowerCase()];
+          }).flat()
       )
     );
   }
