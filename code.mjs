@@ -79,12 +79,12 @@ for (var i = 0; i < board.children.length; i++) {
       for (var e of document.querySelectorAll(".possible-move")) {
         e.classList.remove("possible-move");
       }
-      for (var e of document.querySelectorAll(".last-move")) {
-        e.classList.remove("last-move");
-      }
       var data = {from: s.id, to: this.id};
       chess.move(data)
       tryMove(data);
+      for (var e of document.querySelectorAll(".last-move")) {
+        e.classList.remove("last-move");
+      }
       board.children[coordToInt(data.from)].classList.add("last-move");
       board.children[coordToInt(data.to)].classList.add("last-move");
 
@@ -97,7 +97,7 @@ for (var i = 0; i < board.children.length; i++) {
 
       var moves = chess.moves({square: selected.id});
       for (var move of moves) {
-        if (move.length > 2) {move = move.slice(1);}
+        if (move.length > 2) {move = move.slice(move.length - 2);}
         board.children[coordToInt(move)].classList.add("possible-move");
         console.log(move);
       }
