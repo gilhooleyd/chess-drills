@@ -17,7 +17,7 @@ function intToCoord(i) {
 }
 
 function last(a) {
-  return a[a.length-1];
+  return a[a.length - 1];
 }
 
 function isImg(e) {
@@ -25,9 +25,9 @@ function isImg(e) {
 }
 
 function urlToPiece(url) {
-  var color = url[url.length-6];
-  var type = url[url.length-5];
-  return { color, type};
+  var color = url[url.length - 6];
+  var type = url[url.length - 5];
+  return { color, type };
 }
 
 function tryMove(data) {
@@ -53,80 +53,105 @@ function canSelect(e) {
   return piece.color == t;
 }
 
-// Create the board squares.
-var color = "black";
-for (var i = 0; i < 64; i++) {
-  board.innerHTML += `<div id="${intToCoord(i)}" class="${color}"></div>`;
-  if ((i + 1) % 8 == 0) {
-    continue;
-  }
-  if (color == "black") {
-    color = "white";
-  } else {
-    color = "black";
-  }
-}
-
-// Add the event listener.
-for (var i = 0; i < board.children.length; i++) {
-  var child = board.children[i];
-  child.addEventListener("click", function (e) {
-    if (selected) {
-      var s = selected;
-      selected.classList.remove("selected");
-      selected = null;
-
-      for (var e of document.querySelectorAll(".possible-move")) {
-        e.classList.remove("possible-move");
-      }
-      var data = {from: s.id, to: this.id};
-      chess.move(data)
-      tryMove(data);
-      for (var e of document.querySelectorAll(".last-move")) {
-        e.classList.remove("last-move");
-      }
-      board.children[coordToInt(data.from)].classList.add("last-move");
-      board.children[coordToInt(data.to)].classList.add("last-move");
-
-    } else {
-      if (!canSelect(this)) {
-        return;
-      }
-      selected = this;
-      this.classList.add("selected");
-
-      var moves = chess.moves({square: selected.id});
-      for (var move of moves) {
-        if (move.length > 2) {move = move.slice(move.length - 2);}
-        board.children[coordToInt(move)].classList.add("possible-move");
-        console.log(move);
-      }
-    }
-
-  });
-  if (i >= 64 - 8) {
-    child.innerHTML += `<div class="notation notation-letter">${
-      letters[i % 8]
-    }</div>`;
-  }
-}
-
-for (var i = 0; i < 64; i += 8) {
-  var child = board.children[i];
-  child.innerHTML += `<div class="notation">${8 - i / 8}</div>`;
-}
-
 // Load from the parameters.
 const urlParams = new URLSearchParams(window.location.search);
-const chess = new Chess(atob(urlParams.get("d")));
+let chess = new Chess(atob(urlParams.get("d")));
 
-// Add the initial pieces.
-for (const item of chess.board().flat()) {
-  if (item == null) {
-    continue;
+function render() {
+  // Load from the parameters.
+  const urlParams = new URLSearchParams(window.location.search);
+  chess = new Chess(atob(urlParams.get("d")));
+
+  board.innerHTML = "";
+
+  // Create the board squares.
+  var color = "black";
+  for (var i = 0; i < 64; i++) {
+    board.innerHTML += `<div id="${intToCoord(i)}" class="${color}"></div>`;
+    if ((i + 1) % 8 == 0) {
+      continue;
+    }
+    if (color == "black") {
+      color = "white";
+    } else {
+      color = "black";
+    }
   }
-  const { square, type, color } = item;
-  board.children[
-    coordToInt(square)
-  ].innerHTML += `<img src="img/${color}${type.toUpperCase()}.png">`;
+
+  // Add the event listener.
+  for (var i = 0; i < board.children.length; i++) {
+    var child = board.children[i];
+    child.addEventListener("click", function (e) {
+      if (selected) {
+        var s = selected;
+        selected.classList.remove("selected");
+        selected = null;
+
+        for (var e of document.querySelectorAll(".possible-move")) {
+          e.classList.remove("possible-move");
+        }
+        var data = { from: s.id, to: this.id };
+        if (s.id === this.id) {
+          console.log(`deselecting selected square ${this.id}`);
+          return;
+        }
+        chess.move(data);
+        tryMove(data);
+
+        // Update the URL to reflect the new position
+        const url = new URL(location);
+        url.searchParams.set("d", btoa(chess.fen()));
+        history.pushState({}, "", url);
+
+        for (var e of document.querySelectorAll(".last-move")) {
+          e.classList.remove("last-move");
+        }
+        board.children[coordToInt(data.from)].classList.add("last-move");
+        board.children[coordToInt(data.to)].classList.add("last-move");
+      } else {
+        if (!canSelect(this)) {
+          return;
+        }
+        selected = this;
+        this.classList.add("selected");
+
+        var moves = chess.moves({ square: selected.id });
+        for (var move of moves) {
+          if (move.length > 2) {
+            move = move.slice(move.length - 2);
+          }
+          board.children[coordToInt(move)].classList.add("possible-move");
+          console.log(move);
+        }
+      }
+    });
+    if (i >= 64 - 8) {
+      child.innerHTML += `<div class="notation notation-letter">${
+        letters[i % 8]
+      }</div>`;
+    }
+  }
+
+  for (var i = 0; i < 64; i += 8) {
+    var child = board.children[i];
+    child.innerHTML += `<div class="notation">${8 - i / 8}</div>`;
+  }
+
+  // Add the initial pieces.
+  for (const item of chess.board().flat()) {
+    if (item == null) {
+      continue;
+    }
+    const { square, type, color } = item;
+    board.children[
+      coordToInt(square)
+    ].innerHTML += `<img src="img/${color}${type.toUpperCase()}.png">`;
+  }
 }
+
+// When the user hits the back button, go back on the board.
+addEventListener("popstate", (event) => {
+  render();
+});
+
+render();
