@@ -55,7 +55,7 @@ function canSelect(e) {
 
 // Load from the parameters.
 const urlParams = new URLSearchParams(window.location.search);
-let chess = new Chess(atob(urlParams.get("d")));
+let chess;
 
 function render() {
   // Load from the parameters.
