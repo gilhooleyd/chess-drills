@@ -116,7 +116,19 @@ function render() {
         this.classList.add("selected");
 
         var moves = chess.moves({ square: selected.id });
-        for (var move of moves) {
+        for (let move of moves) {
+          // Remove check/checkmate annotations
+          move = move.replace("+", "").replace("#", "");
+
+          // Account for castling
+          if (move === "O-O") {
+            move = chess.turn() === "w" ? "Kg1" : "Kg8";
+          }
+          if (move === "O-O-O") {
+            move = chess.turn() === "w" ? "Kc1" : "Kc8";
+          }
+
+          // Get only the target square
           if (move.length > 2) {
             move = move.slice(move.length - 2);
           }
