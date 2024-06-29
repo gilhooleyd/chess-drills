@@ -166,4 +166,8 @@ addEventListener("popstate", (event) => {
   render();
 });
 
+document.querySelector("#reset").addEventListener("click", (event) => {
+  window.location = `?d=${btoa(new Chess().fen())}`;
+});
+
 render();
